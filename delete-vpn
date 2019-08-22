@@ -1,0 +1,13 @@
+#! /bin/bash
+
+source ./vars
+
+# delete AWS cloudformation stack
+aws cloudformation delete-stack --stack-name $stack_name --region $region
+
+echo "The AWS cloudformation stack has now been deleted"
+
+# clear the dns entry
+freenom-dns clear $domain A
+
+echo "The DNS record has now been cleared"

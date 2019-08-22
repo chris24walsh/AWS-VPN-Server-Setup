@@ -1,0 +1,23 @@
+#! /bin/bash
+
+source ./vars
+
+# assign yaml template to shell variable
+template=$(cat Unified-Cloud-Formation.yaml)
+
+# create VPN stack
+aws cloudformation create-stack --stack-name $stack_name --template-body $template --region $region --parameters ParameterKey=Username,ParameterValue=$username ParameterKey=VPNPassword,ParameterValue=$password ParameterKey=VPNPhrase,ParameterValue=$passphrase
+
+# wait until stack is complete
+aws cloudformation wait stack-create-complete --stack-name $stack_name
+
+# grep IP of VPN server
+IP=$(aws cloudformation describe-stacks --stack-name $stack_name --region $region | jq '.Stacks | .[] | .Outputs | .[] | select(.OutputKey == "VPNServerAddress") | .OutputValue' -r)
+
+echo "VPN server has now been created"
+
+# set freenom dns record
+freenom-dns set $domain A $IP 300
+
+echo "DNS record has now been set"
+echo "You may now access your VPN at $domain, server IP is $IP"
